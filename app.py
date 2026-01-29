@@ -6,12 +6,13 @@ import numpy as np
 app = Flask(__name__)
 CORS(app)
 
-# Load model and scaler
+# Load model, scaler, and feature names
 try:
-    model = joblib.load('model/svm_model.pkl')
+    model = joblib.load('model/rf_model.pkl')
     scaler = joblib.load('model/scaler.pkl')
+    feature_names = joblib.load('model/feature_names.pkl')
 except FileNotFoundError:
-    print("Error: Model or Scaler not found. Please run train_model.py first.")
+    print("Error: Model files not found. Please run train_model.py first.")
     exit(1)
 
 @app.route('/')
@@ -23,29 +24,31 @@ def predict():
     try:
         data = request.get_json()
         
-        # Extract features in correct order as per training
-        # Features: Pregnancies, Glucose, BloodPressure, SkinThickness, Insulin, BMI, DiabetesPedigreeFunction, Age
-        bmi = float(data['bmi'])
-        age = float(data['age'])
-        glucose = float(data['glucose'])
-
-        features = [
-            float(data['pregnancies']),
-            glucose,
-            float(data['bloodPressure']),
-            float(data['skinThickness']),
-            float(data['insulin']),
-            bmi,
-            float(data['diabetesPedigreeFunction']),
-            age,
-            # Feature Engineering (MUST MATCH TRAIN)
-            bmi * age,           # BMI_Age
-            glucose * bmi,       # Glucose_BMI
-            glucose * age        # Glucose_Age
+        # Extract features in the EXACT order of training
+        # Features: "FastingGlucose", "HbA1c", "OGTT_2hr", "FastingInsulin", "HOMA_IR",
+        # "BMI", "WaistCircumference", "WaistHipRatio", "SystolicBP",
+        # "Triglycerides", "HDL", "Age", "FamilyHistory", "PhysicalActivity", "Sex"
+        
+        input_features = [
+            float(data['FastingGlucose']),
+            float(data['HbA1c']),
+            float(data['OGTT_2hr']),
+            float(data['FastingInsulin']),
+            float(data['HOMA_IR']),
+            float(data['BMI']),
+            float(data['WaistCircumference']),
+            float(data['WaistHipRatio']),
+            float(data['SystolicBP']),
+            float(data['Triglycerides']),
+            float(data['HDL']),
+            float(data['Age']),
+            int(data['FamilyHistory']),     # 0 or 1
+            float(data['PhysicalActivity']), # Minutes/week? or Index? Assumed numeric.
+            int(data['Sex'])                # 0 or 1
         ]
         
         # Reshape for single sample
-        final_features = np.array(features).reshape(1, -1)
+        final_features = np.array(input_features).reshape(1, -1)
         
         # Scale inputs
         scaled_features = scaler.transform(final_features)

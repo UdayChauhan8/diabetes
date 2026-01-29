@@ -33,15 +33,23 @@ document.addEventListener('DOMContentLoaded', function () {
         spinner.classList.remove('d-none');
 
         // Collect data
+        // Collect data
         const formData = {
-            pregnancies: document.getElementById('pregnancies').value,
-            glucose: document.getElementById('glucose').value,
-            bloodPressure: document.getElementById('bloodPressure').value,
-            skinThickness: document.getElementById('skinThickness').value,
-            insulin: document.getElementById('insulin').value,
-            bmi: document.getElementById('bmi').value,
-            diabetesPedigreeFunction: document.getElementById('diabetesPedigreeFunction').value,
-            age: document.getElementById('age').value
+            FastingGlucose: document.getElementById('FastingGlucose').value,
+            HbA1c: document.getElementById('HbA1c').value,
+            OGTT_2hr: document.getElementById('OGTT_2hr').value,
+            FastingInsulin: document.getElementById('FastingInsulin').value,
+            HOMA_IR: document.getElementById('HOMA_IR').value,
+            BMI: document.getElementById('BMI').value,
+            WaistCircumference: document.getElementById('WaistCircumference').value,
+            WaistHipRatio: document.getElementById('WaistHipRatio').value,
+            SystolicBP: document.getElementById('SystolicBP').value,
+            Triglycerides: document.getElementById('Triglycerides').value,
+            HDL: document.getElementById('HDL').value,
+            Age: document.getElementById('Age').value,
+            FamilyHistory: document.getElementById('FamilyHistory').value,
+            PhysicalActivity: document.getElementById('PhysicalActivity').value,
+            Sex: document.getElementById('Sex').value
         };
 
         // Send API Request

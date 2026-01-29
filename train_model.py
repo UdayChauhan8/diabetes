@@ -1,27 +1,48 @@
 import os
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split, GridSearchCV, StratifiedKFold
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import RandomizedSearchCV, train_test_split, StratifiedKFold
 from sklearn.preprocessing import StandardScaler
-from sklearn.svm import SVC
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, roc_auc_score
 import joblib
 
 if __name__ == "__main__":
-    df = pd.read_csv('diabetes.csv')
+    # 1. Load New Dataset
+    df = pd.read_csv('/home/chauhan_817/Downloads/diabetes_1500_patients.csv')
 
-    # ================= DATA CLEANING (MAJOR FIX) =================
-    cols_with_zero_issue = ["Glucose", "BloodPressure", "SkinThickness", "Insulin", "BMI"]
-    for col in cols_with_zero_issue:
-        df[col] = df[col].replace(0, df[col].median())
+    # 2. Define Features
+    # Explicitly selecting the 15 features provided by the user + Outcome
+    features_list = [
+        "FastingGlucose", "HbA1c", "OGTT_2hr", "FastingInsulin", "HOMA_IR",
+        "BMI", "WaistCircumference", "WaistHipRatio", "SystolicBP",
+        "Triglycerides", "HDL", "Age", "FamilyHistory", "PhysicalActivity", "Sex"
+    ]
+    
+    # Validation: Ensure all columns exist
+    for col in features_list:
+        if col not in df.columns:
+            raise ValueError(f"Missing column in CSV: {col}")
 
-    # ================= FEATURE ENGINEERING =================
-    df["BMI_Age"] = df["BMI"] * df["Age"]
-    df["Glucose_BMI"] = df["Glucose"] * df["BMI"]
-    df["Glucose_Age"] = df["Glucose"] * df["Age"]
-
-    X = df.drop("Outcome", axis=1)
+    X = df[features_list].copy()
     y = df["Outcome"]
+
+    print(f"Features selected: {len(X.columns)}")
+
+    # ================= DATA CLEANING =================
+    # Replace 0 with median for biological metrics where 0 is chemically impossible
+    # Note: 0 is valid for 'FamilyHistory', 'PhysicalActivity', 'Sex'. 
+    cols_to_clean = [
+        "FastingGlucose", "HbA1c", "OGTT_2hr", "FastingInsulin", "HOMA_IR",
+        "BMI", "WaistCircumference", "WaistHipRatio", "SystolicBP",
+        "Triglycerides", "HDL", "Age"
+    ]
+    
+    print("Cleaning data (replacing 0s with median)...")
+    for col in cols_to_clean:
+        if (X[col] == 0).any():
+            median_val = X[col].median()
+            X[col] = X[col].replace(0, median_val)
 
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42, stratify=y
@@ -31,29 +52,31 @@ if __name__ == "__main__":
     X_train = scaler.fit_transform(X_train)
     X_test = scaler.transform(X_test)
 
-    svm = SVC(probability=True, class_weight='balanced')
-
-    param_grid = {
-        'C': [1, 10, 50, 100],
-        'gamma': ['scale', 0.01, 0.1],
-        'kernel': ['rbf']
+    rf = RandomForestClassifier(random_state=42, class_weight='balanced')
+    
+    param_dist = {
+        'n_estimators': [100, 200, 300, 400],
+        'max_depth': [None, 8, 12, 15, 20],
+        'min_samples_split': [2, 5, 10],
+        'min_samples_leaf': [1, 2, 4],
+        'max_features': ['sqrt', 'log2']
     }
 
-    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-
-    grid = GridSearchCV(
-        svm,
-        param_grid,
-        cv=cv,
-        scoring='roc_auc',  # better than recall alone
+    print("Running RandomizedSearchCV...")
+    search = RandomizedSearchCV(
+        rf,
+        param_distributions=param_dist,
+        n_iter=20,
+        cv=StratifiedKFold(n_splits=5),
+        scoring='roc_auc',
+        random_state=42,
         n_jobs=1
     )
 
-    grid.fit(X_train, y_train)
+    search.fit(X_train, y_train)
 
-    print("Best Parameters:", grid.best_params_)
-
-    best_model = grid.best_estimator_
+    best_model = search.best_estimator_
+    print("Best Parameters:", search.best_params_)
 
     y_pred = best_model.predict(X_test)
     y_prob = best_model.predict_proba(X_test)[:, 1]
@@ -61,10 +84,13 @@ if __name__ == "__main__":
     print("\nAccuracy:", accuracy_score(y_test, y_pred))
     print("ROC-AUC:", roc_auc_score(y_test, y_prob))
     print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred))
-    print("\nClassification Report:\n", classification_report(y_test, y_pred))
-
+    
+    # Save Feature Names for App Validation
     os.makedirs("model", exist_ok=True)
-    joblib.dump(best_model, 'model/svm_model.pkl')
+    joblib.dump(features_list, 'model/feature_names.pkl')
+    
+    # Save Model & Scaler
+    joblib.dump(best_model, 'model/rf_model.pkl')
     joblib.dump(scaler, 'model/scaler.pkl')
 
-    print("Improved model saved.")
+    print("Model saved to model/rf_model.pkl")
