@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diabetes Prediction System</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body class="bg-light">
+
+    <div class="container py-5">
+        <header class="text-center mb-5">
+            <h1 class="display-4 text-primary fw-bold"><i class="fas fa-user-md"></i> Diabetes Prediction System</h1>
+            <p class="lead text-muted">Enter medical details to assess diabetes risk via SVM Model</p>
+        </header>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="card shadow-lg border-0 rounded-lg">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Patient Information</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <form id="predictionForm">
+                            <div class="row g-3">
+                                <!-- Pregnancies -->
+                                <div class="col-md-6">
+                                    <label for="pregnancies" class="form-label">Pregnancies </label>
+                                    <input type="number" class="form-control" id="pregnancies" required min="0" max="20"
+                                        placeholder="e.g. 0">
+                                </div>
+                                <!-- Glucose -->
+                                <div class="col-md-6">
+                                    <label for="glucose" class="form-label">Glucose Level </label>
+                                    <input type="number" class="form-control" id="glucose" required min="0" max="200"
+                                        placeholder="e.g. 120">
+                                </div>
+                                <!-- Blood Pressure -->
+                                <div class="col-md-6">
+                                    <label for="bloodPressure" class="form-label">Blood Pressure </label>
+                                    <input type="number" class="form-control" id="bloodPressure" required min="0"
+                                        max="150" placeholder="e.g. 70">
+                                </div>
+                                <!-- Skin Thickness -->
+                                <div class="col-md-6">
+                                    <label for="skinThickness" class="form-label">Skin Thickness</label>
+                                    <input type="number" class="form-control" id="skinThickness" required min="0"
+                                        max="100" placeholder="e.g. 20">
+                                </div>
+                                <!-- Insulin -->
+                                <div class="col-md-6">
+                                    <label for="insulin" class="form-label">Insulin </label>
+                                    <input type="number" class="form-control" id="insulin" required min="0" max="900"
+                                        placeholder="e.g. 79">
+                                </div>
+                                <!-- BMI -->
+                                <div class="col-md-6">
+                                    <label for="bmi" class="form-label">BMI </label>
+                                    <input type="number" step="0.1" class="form-control" id="bmi" required min="0"
+                                        max="70" placeholder="e.g. 32.0">
+                                </div>
+                                <!-- Diabetes Pedigree -->
+                                <div class="col-md-6">
+                                    <label for="diabetesPedigreeFunction" class="form-label">Diabetes Pedigree Function
+                                    </label>
+                                    <input type="number" step="0.01" class="form-control" id="diabetesPedigreeFunction"
+                                        required min="0" max="3" placeholder="e.g. 0.5">
+                                </div>
+                                <!-- Age -->
+                                <div class="col-md-6">
+                                    <label for="age" class="form-label">Age </label>
+                                    <input type="number" class="form-control" id="age" required min="18" max="120"
+                                        placeholder="e.g. 33">
+                                </div>
+                            </div>
+
+                            <div class="mt-4 d-grid gap-2 d-md-flex justify-content-md-end">
+                                <button type="reset" class="btn btn-outline-secondary me-md-2"
+                                    id="resetBtn">Reset</button>
+                                <button type="submit" class="btn btn-primary px-5" id="submitBtn">
+                                    <span class="spinner-border spinner-border-sm d-none" role="status"
+                                        aria-hidden="true"></span>
+                                    Predict Risk
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Result Section -->
+                <div id="resultSection" class="mt-4 d-none">
+                    <div class="card shadow border-0 overflow-hidden" id="resultCard">
+                        <div class="card-body text-center p-5">
+                            <div class="mb-3 display-1">
+                                <i id="resultIcon" class="fas"></i>
+                            </div>
+                            <h2 id="predictionText" class="fw-bold mb-3 display-5"></h2>
+                            <h4 class="text-muted mb-4">Probability of Diabetes: <span id="probabilityText"
+                                    class="fw-bold"></span></h4>
+                            <div class="progress mt-3" style="height: 30px;">
+                                <div id="probabilityBar"
+                                    class="progress-bar progress-bar-striped progress-bar-animated fw-bold fs-6"
+                                    role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error Alert -->
+                <div id="errorAlert" class="alert alert-danger mt-3 d-none text-center" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i> <span id="errorMessage"></span>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center py-4 text-muted mt-5">
+        <small>&copy; 2024 Diabetes Prediction System. All rights reserved.</small>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+
+</html>

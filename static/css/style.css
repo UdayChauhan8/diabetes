@@ -1,0 +1,84 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f8f9fa;
+}
+
+/* Custom Card Styling */
+.card {
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.card-header {
+    /* Royal Red Gradient */
+    background: linear-gradient(45deg, #a4161a, #660708);
+}
+
+/* Form inputs focus */
+.form-control:focus {
+    border-color: #a4161a;
+    box-shadow: 0 0 0 0.25rem rgba(164, 22, 26, 0.25);
+}
+
+/* Result Card Styles */
+.card-success {
+    border-top: 5px solid #28a745 !important;
+}
+
+.card-danger {
+    border-top: 5px solid #dc3545 !important;
+}
+
+/* Animation for result */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#resultSection {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Helper Colors */
+.text-medical {
+    color: #a4161a;
+}
+
+/* Bootstrap Overrides for Theme */
+.bg-primary {
+    background-color: #a4161a !important;
+}
+
+.text-primary {
+    color: #a4161a !important;
+}
+
+.btn-primary {
+    background-color: #a4161a;
+    border-color: #a4161a;
+}
+
+.btn-primary:hover {
+    background-color: #800f13;
+    border-color: #660708;
+}
+
+.btn-outline-secondary {
+    color: #6c757d;
+    border-color: #6c757d;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #6c757d;
+    color: #fff;
+}
